@@ -6,24 +6,28 @@ import ffmpeg
 from PySide6.QtCore import Qt
 import moviepy.Clip
 
-parser = argparse.ArgumentParser(
-    prog="Python Video Editor",
-    description="Simple Video Clip/Quality/Resolution Editor"
-)
+def arg_parser():
+    parser = argparse.ArgumentParser(
+        prog="Python Video Editor",
+        description="Simple Video Clip/Quality/Resolution Editor"
+    )
 
-parser.add_argument("-i", "--input")
-parser.add_argument('-o', "--output")
-parser.add_argument("-cb", "--clipbegin")
-parser.add_argument("-ce", "--clipend")
-parser.add_argument("-rw", "--resolutionw")
-parser.add_argument("-rh", "--resolutionh")
-parser.add_argument("-b", "--bitrate")
-parser.add_argument("-v", "--volume")
+    parser.add_argument("-i", "--input")
+    parser.add_argument('-o', "--output")
+    parser.add_argument("-cb", "--clipbegin")
+    parser.add_argument("-ce", "--clipend")
+    parser.add_argument("-rw", "--resolutionw")
+    parser.add_argument("-rh", "--resolutionh")
+    parser.add_argument("-b", "--bitrate")
+    parser.add_argument("-v", "--volume")
 
-args = parser.parse_args()
+    args = parser.parse_args()
+
+    return args
 
 
 def main():
+    args = arg_parser()
     if args.input == None or args.output == None:
         print("No input/output file selected. Please input a filename to be edited.")
         return
