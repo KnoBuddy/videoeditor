@@ -2,6 +2,7 @@ import sys
 import argparse
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
+import moviepy.audio.fx.all as afx
 import ffmpeg
 from PySide6.QtCore import Qt
 import moviepy.Clip
@@ -37,8 +38,9 @@ def main():
         args.resolutionw = int(args.resolutionw)
 
     video = VideoFileClip(args.input, target_resolution=(args.resolutionw, args.resolutionh)).subclip(args.clipbegin, args.clipend)
-    if args.volume == True:
-        video.fx(vfx.volumex, args.volume)
+    if args.volume is not None:
+        volume = float(args.volume)
+        video = video.fx(afx.volumex, volume)
     video.write_videofile(args.output, codec="libx264", audio_codec="aac", bitrate=args.bitrate)
 
 if __name__ == "__main__":
