@@ -149,7 +149,13 @@
         </widget>
        </item>
        <item alignment="Qt::AlignHCenter">
-        <widget class="QSlider" name="volum_slider">
+        <widget class="QSlider" name="volume_slider">
+         <property name="maximum">
+          <number>200</number>
+         </property>
+         <property name="value">
+          <number>100</number>
+         </property>
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

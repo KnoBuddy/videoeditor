@@ -6,7 +6,7 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 import moviepy.audio.fx.all as afx
 import ffmpeg
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QLCDNumber
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, Qt, QThread, Signal
 
@@ -56,6 +56,12 @@ class VideoEditor(QMainWindow):
         self.input_file_text = self.ui.findChild(QLineEdit, "input_file_text")
         self.input_file_button = self.ui.findChild(QPushButton,'input_file_button')
 
+        self.volume_slider = self.ui.findChild(QSlider, "volume_slider")
+        self.volume_number = self.ui.findChild(QLCDNumber, "volume_number")
+
+        if self.volume_slider and self.volume_number:
+            self.volume_number.display(self.volume_slider.value())
+
         self.connect_objects()
 
     def connect_objects(self):
@@ -65,6 +71,11 @@ class VideoEditor(QMainWindow):
             print("Run button not found!")
         if self.input_file_button:
             self.input_file_button.clicked.connect(self.select_input_file)
+        if self.volume_slider:
+            self.volume_slider.valueChanged.connect(self.update_volume_lcd)
+    
+    def update_volume_lcd(self, value):
+        self.volume_number.display(value)
 
     def select_input_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
@@ -92,6 +103,7 @@ class VideoEditor(QMainWindow):
         clip_end = None
         resolution_w = None
         resolution_h = None
+        volume = self.volume_slider.value() if self.volume_slider else 100
 
         if self.start_check.isChecked():
             try:
@@ -127,9 +139,9 @@ class VideoEditor(QMainWindow):
                 video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin, clip_end)
             else:
                 video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h))
-            #if args.volume is not None:
-            #    volume = float(args.volume)
-            #    video = video.fx(afx.volumex, volume)
+            # Adjust volume
+            volume = float(self.volume_slider.value()/100)
+            video = video.fx(afx.volumex, volume)
             output_file = input_file.removesuffix(".mp4")
             if not new_bitrate:
                 video.write_videofile(f"{output_file}-modified.mp4", codec="libx264", audio_codec="aac")
