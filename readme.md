@@ -1,3 +1,3 @@
-## Video Editor
+# Video Editor
 
-# Written in Python and QT
+## Written in Python and QT
