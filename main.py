@@ -115,26 +115,6 @@ class VideoEditor(QMainWindow):
         self.thread.finished.connect(self.thread.quit)
         self.thread.start()
 
-
-def arg_parser():
-    parser = argparse.ArgumentParser(
-        prog="Python Video Editor",
-        description="Simple Video Clip/Quality/Resolution Editor"
-    )
-
-    parser.add_argument("-i", "--input")
-    parser.add_argument('-o', "--output")
-    parser.add_argument("-cb", "--clipbegin")
-    parser.add_argument("-ce", "--clipend")
-    parser.add_argument("-rw", "--resolutionw")
-    parser.add_argument("-rh", "--resolutionh")
-    parser.add_argument("-b", "--bitrate")
-    parser.add_argument("-v", "--volume")
-
-    args = parser.parse_args()
-
-    return args
-
 if __name__ == "__main__":
     # main()
     app = QApplication([])

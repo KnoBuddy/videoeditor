@@ -71,18 +71,11 @@ class VideoEditor(QMainWindow):
             print("Run button not found!")
         if self.input_file_button:
             self.input_file_button.clicked.connect(self.select_input_file)
-        if self.output_file_button:
-            self.output_file_button.clicked.connect(self.select_output_file)
     
     def select_input_file(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Select Input Video")
         if file_name:
             self.input_file_text.setText(file_name)
-
-    def select_output_file(self):
-        file_name, _ = QFileDialog.getSaveFileName(self, "Select Output Video")
-        if file_name:
-            self.output_file_text.setText(file_name)
 
     def run_button_clicked(self):
         input_file = self.input_file_text.text()
