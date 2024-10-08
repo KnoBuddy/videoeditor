@@ -132,11 +132,17 @@ class VideoEditor(QMainWindow):
                 new_bitrate = int(self.bitrate_text.text())
             except ValueError:
                 print("Invalid bitrate.")
+        else:
+            new_bitrate = None
 
 
         def process_video():
             if clip_begin and clip_end:
                 video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin, clip_end)
+            elif clip_begin and not clip_end:
+                video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin)
+            elif clip_end and not clip_begin:
+                video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h)).subclip(0, clip_end)
             else:
                 video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h))
             # Adjust volume
