@@ -1,3 +1,7 @@
+# To Do:
+# Add Sliders for Beginning and End
+# Add preview img/video
+
 import sys
 import os
 import argparse
@@ -40,6 +44,7 @@ class VideoEditor(QMainWindow):
         self.setCentralWidget(self.ui)
         self.setFixedSize(self.ui.size())
 
+        self.showMaximized()
 
         # Load objects
         self.run_button = self.ui.findChild(QPushButton, 'run')
