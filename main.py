@@ -59,20 +59,14 @@ class VideoEditor(QMainWindow):
         self.volume_slider = self.ui.findChild(QSlider, "volume_slider")
         self.volume_number = self.ui.findChild(QLCDNumber, "volume_number")
 
-        if self.volume_slider and self.volume_number:
-            self.volume_number.display(self.volume_slider.value())
+        self.volume_number.display(self.volume_slider.value())
 
         self.connect_objects()
 
     def connect_objects(self):
-        if self.run_button:
-            self.run_button.clicked.connect(self.run_button_clicked)
-        else:
-            print("Run button not found!")
-        if self.input_file_button:
-            self.input_file_button.clicked.connect(self.select_input_file)
-        if self.volume_slider:
-            self.volume_slider.valueChanged.connect(self.update_volume_lcd)
+        self.run_button.clicked.connect(self.run_button_clicked)
+        self.input_file_button.clicked.connect(self.select_input_file)
+        self.volume_slider.valueChanged.connect(self.update_volume_lcd)
     
     def update_volume_lcd(self, value):
         self.volume_number.display(value)
@@ -92,12 +86,12 @@ class VideoEditor(QMainWindow):
 
 
     def run_button_clicked(self):
+        input_file = self.input_file_text.text()
 
-        if not self.input_file_text:
+        if not input_file:
             print("No input file selected. Please input a filename to be edited.")
             return
 
-        input_file = self.input_file_text.text()
         
         clip_begin = None
         clip_end = None
