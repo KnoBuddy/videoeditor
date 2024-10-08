@@ -39,7 +39,7 @@
       <x>189</x>
       <y>120</y>
       <width>171</width>
-      <height>121</height>
+      <height>141</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -71,6 +71,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QCheckBox" name="bitrate_check">
+       <property name="text">
+        <string>Bitrate</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
    <widget class="QWidget" name="verticalLayoutWidget_2">
@@ -79,21 +86,24 @@
       <x>360</x>
       <y>120</y>
       <width>201</width>
-      <height>121</height>
+      <height>141</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QTextEdit" name="start_text"/>
+      <widget class="QLineEdit" name="start_text"/>
      </item>
      <item>
-      <widget class="QTextEdit" name="end_text"/>
+      <widget class="QLineEdit" name="end_text"/>
      </item>
      <item>
-      <widget class="QTextEdit" name="res_w_text"/>
+      <widget class="QLineEdit" name="res_w_text"/>
      </item>
      <item>
-      <widget class="QTextEdit" name="res_h_text"/>
+      <widget class="QLineEdit" name="res_h_text"/>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="bitrate_text"/>
      </item>
     </layout>
    </widget>
@@ -108,14 +118,14 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="imput_file_button">
+      <widget class="QPushButton" name="input_file_button">
        <property name="text">
         <string>Select Input File</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QTextEdit" name="input_file_text"/>
+      <widget class="QLineEdit" name="input_file_text"/>
      </item>
     </layout>
    </widget>
@@ -165,16 +175,6 @@
      </item>
     </layout>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>20</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

@@ -13,6 +13,8 @@ from PySide6.QtCore import QFile, Qt, QThread, Signal
 # Set the OpenGL attribute before creating the QApplication
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
+cwd = os.getcwd()
+
 class VideoProcessingThread(QThread):
     progress = Signal(str)
     finished = Signal()
@@ -34,20 +36,25 @@ class VideoEditor(QMainWindow):
         ui_file_path = os.path.abspath("gui.ui")
         print(f"Loading UI from: {ui_file_path}")
         
-        self.ui = loader.load(ui_file_path, self)
+        self.ui = loader.load(ui_file_path)
+        self.setCentralWidget(self.ui)
+        self.setFixedSize(self.ui.size())
+
 
         # Load objects
-        self.run_button = self.findChild(QPushButton, 'run')
-        self.start_check = self.findChild(QCheckBox, 'run')
-        self.end_check = self.findChild(QCheckBox, 'run')
-        self.res_w_check = self.findChild(QCheckBox, 'run')
-        self.res_h_check = self.findChild(QCheckBox, 'run')
-        self.start_time = self.findChild(QLineEdit, 'run')
-        self.end_time = self.findChild(QLineEdit, 'run')
-        self.res_w = self.findChild(QLineEdit, 'run')
-        self.res_h = self.findChild(QLineEdit, 'run')
-        self.input_file_text = self.findChild(QLineEdit, "input_file_text")
-        self.input_file_button = self.findChild(QPushButton,'input_file_button')
+        self.run_button = self.ui.findChild(QPushButton, 'run')
+        self.start_check = self.ui.findChild(QCheckBox, 'start_time_check')
+        self.end_check = self.ui.findChild(QCheckBox, 'end_time_check')
+        self.res_w_check = self.ui.findChild(QCheckBox, 'res_w_check')
+        self.res_h_check = self.ui.findChild(QCheckBox, 'res_h_check')
+        self.start_time = self.ui.findChild(QLineEdit, 'start_text')
+        self.end_time = self.ui.findChild(QLineEdit, 'end_text')
+        self.res_w = self.ui.findChild(QLineEdit, 'res_w_text')
+        self.res_h = self.ui.findChild(QLineEdit, 'res_h_text')
+        self.bitrate_check = self.ui.findChild(QCheckBox, "bitrate_check")
+        self.bitrate_text = self.ui.findChild(QLineEdit, "bitrate_text")
+        self.input_file_text = self.ui.findChild(QLineEdit, "input_file_text")
+        self.input_file_button = self.ui.findChild(QPushButton,'input_file_button')
 
         self.connect_objects()
 
@@ -60,17 +67,26 @@ class VideoEditor(QMainWindow):
             self.input_file_button.clicked.connect(self.select_input_file)
 
     def select_input_file(self):
-        file_name, _ = QFileDialog.getOpenFileName(self, "Select Input Video")
+        file_name, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Input Video",
+            os.path.expanduser(cwd),
+            "Video Files (*.mp4 *.avi *.mov);;All Files (*)"
+        )
         if file_name:
-            self.input_file_text.setText(file_name)
+            if os.path.isfile(file_name):
+                self.input_file_text.setText(file_name)
+            else:
+                QMessageBox.warning(self, "Invalid File", "The selected file is not valid.")
+
 
     def run_button_clicked(self):
 
-        input_file = self.input_file_text.text()
-
-        if not self.input_file or not self.output_file:
-            print("No input/output file selected. Please input a filename to be edited.")
+        if not self.input_file_text:
+            print("No input file selected. Please input a filename to be edited.")
             return
+
+        input_file = self.input_file_text.text()
         
         clip_begin = None
         clip_end = None
@@ -79,12 +95,12 @@ class VideoEditor(QMainWindow):
 
         if self.start_check.isChecked():
             try:
-                clip_begin = float(self.start_time.text())
+                clip_begin = self.start_time.text()
             except ValueError:
                 print("Invalid start time. Please enter the value in 00:00:00")
         if self.end_check.isChecked():
             try:
-                clip_end = float(self.end_time.text())
+                clip_end = self.end_time.text()
             except ValueError:
                 print("Invalid start time. Please enter the value in 00:00:00")
         if self.res_w_check.isChecked():
@@ -99,25 +115,35 @@ class VideoEditor(QMainWindow):
             except ValueError:
                 print("Invalid resolution height.")
                 return
+        if self.bitrate_check.isChecked():
+            try:
+                new_bitrate = int(self.bitrate_text.text())
+            except ValueError:
+                print("Invalid bitrate.")
 
 
         def process_video():
-            try:
+            if clip_begin and clip_end:
                 video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin, clip_end)
-                #if args.volume is not None:
-                #    volume = float(args.volume)
-                #    video = video.fx(afx.volumex, volume)
-                video.write_videofile(f"Modified-{self.input_file}", codec="libx264", audio_codec="aac") # bitrate=args.bitrate)
-            except Exception as e:
-                print("An error occured in video processing: {e}")
+            else:
+                video = VideoFileClip(input_file, target_resolution=(resolution_w, resolution_h))
+            #if args.volume is not None:
+            #    volume = float(args.volume)
+            #    video = video.fx(afx.volumex, volume)
+            output_file = input_file.removesuffix(".mp4")
+            if not new_bitrate:
+                video.write_videofile(f"{output_file}-modified.mp4", codec="libx264", audio_codec="aac")
+            else:
+                video.write_videofile(f"{output_file}-modified.mp4", codec="libx264", audio_codec="aac", bitrate=f"{new_bitrate}k")
         
         self.thread = VideoProcessingThread(process_video)
         self.thread.finished.connect(self.thread.quit)
         self.thread.start()
 
+
 if __name__ == "__main__":
     # main()
     app = QApplication([])
     window = VideoEditor()
-    window.ui.show()
+    window.show()
     sys.exit(app.exec())
