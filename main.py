@@ -12,12 +12,17 @@ import ffmpeg
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QLCDNumber
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile, Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QFontDatabase, QFont
+
+import resources_rc
 
 # Set the OpenGL attribute before creating the QApplication
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 cwd = os.getcwd()
+
+updating = False
 
 class VideoProcessingThread(QThread):
     progress = Signal(str)
@@ -44,7 +49,10 @@ class VideoEditor(QMainWindow):
         self.setCentralWidget(self.ui)
         self.setFixedSize(self.ui.size())
 
-        self.showMaximized()
+        font_id = QFontDatabase.addApplicationFont(":/fonts/digital-7 (mono).ttf")
+        if font_id < 0:
+            print("Failed to load font")
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
 
         # Load objects
         self.run_button = self.ui.findChild(QPushButton, 'run')
@@ -52,19 +60,21 @@ class VideoEditor(QMainWindow):
         self.end_check = self.ui.findChild(QCheckBox, 'end_time_check')
         self.res_w_check = self.ui.findChild(QCheckBox, 'res_w_check')
         self.res_h_check = self.ui.findChild(QCheckBox, 'res_h_check')
+        self.bitrate_check = self.ui.findChild(QCheckBox, "bitrate_check")
         self.start_time = self.ui.findChild(QLineEdit, 'start_text')
         self.end_time = self.ui.findChild(QLineEdit, 'end_text')
         self.res_w = self.ui.findChild(QLineEdit, 'res_w_text')
         self.res_h = self.ui.findChild(QLineEdit, 'res_h_text')
-        self.bitrate_check = self.ui.findChild(QCheckBox, "bitrate_check")
         self.bitrate_text = self.ui.findChild(QLineEdit, "bitrate_text")
         self.input_file_text = self.ui.findChild(QLineEdit, "input_file_text")
         self.input_file_button = self.ui.findChild(QPushButton,'input_file_button')
 
         self.volume_slider = self.ui.findChild(QSlider, "volume_slider")
-        self.volume_number = self.ui.findChild(QLCDNumber, "volume_number")
+        self.volume_number = self.ui.findChild(QLineEdit, "volume_number")
+        self.volume_number.setFont(QFont(font_family, 48))
+        self.volume_number.setText(str(self.volume_slider.value()))
 
-        self.volume_number.display(self.volume_slider.value())
+        self.updating = False
 
         self.connect_objects()
 
@@ -72,9 +82,25 @@ class VideoEditor(QMainWindow):
         self.run_button.clicked.connect(self.run_button_clicked)
         self.input_file_button.clicked.connect(self.select_input_file)
         self.volume_slider.valueChanged.connect(self.update_volume_lcd)
+        self.volume_number.textChanged.connect(self.update_volume_slider)
     
     def update_volume_lcd(self, value):
-        self.volume_number.display(value)
+        self.volume_number.setText(str(value))
+
+    def update_volume_slider(self):
+        if not self.updating:
+            self.updating = True
+            text = self.volume_number.text()
+            if text.isdigit():
+                value = int(text)
+                if self.volume_slider.minimum() <= value <= self.volume_slider.maximum():
+                    self.volume_slider.setValue(value)
+                else:
+                    # If value is out of bounds, adjust it
+                    value = max(self.volume_slider.minimum(), min(value, self.volume_slider.maximum()))
+                    self.volume_slider.setValue(value)
+                    self.volume_number.setText(str(value))
+            self.updating = False
 
     def select_input_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
@@ -102,7 +128,6 @@ class VideoEditor(QMainWindow):
         clip_end = None
         resolution_w = None
         resolution_h = None
-        volume = self.volume_slider.value() if self.volume_slider else 100
 
         if self.start_check.isChecked():
             try:
