@@ -17,6 +17,20 @@ from PySide6.QtGui import QFontDatabase, QFont
 
 import resources_rc
 
+# Path handling for the .ui file and fonts
+if hasattr(sys, '_MEIPASS'):
+    # Packaged environment
+    ui_file_path = os.path.join(sys._MEIPASS, 'gui.ui')
+    font_path = os.path.join(sys._MEIPASS, 'fonts', 'digital-7 (mono).ttf')
+else:
+    # Development environment
+    ui_file_path = os.path.abspath('gui.ui')
+    font_path = os.path.abspath('fonts/digital-7 (mono).ttf')
+
+# Log paths for debugging purposes
+print(f"Loading UI from: {ui_file_path}")
+print(f"Loading font from: {font_path}")
+
 # Set the OpenGL attribute before creating the QApplication
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
@@ -41,18 +55,21 @@ class VideoEditor(QMainWindow):
         super().__init__()
         loader = QUiLoader()
         
-        # Use absolute path for the .ui file for better debugging
-        ui_file_path = os.path.abspath("gui.ui")
-        print(f"Loading UI from: {ui_file_path}")
-        
         self.ui = loader.load(ui_file_path)
         self.setCentralWidget(self.ui)
         self.setFixedSize(self.ui.size())
 
-        font_id = QFontDatabase.addApplicationFont(":/fonts/digital-7 (mono).ttf")
+        # Attempt to load the font
+        font_id = QFontDatabase.addApplicationFont(font_path)
+
         if font_id < 0:
-            print("Failed to load font")
-        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+            print(f"Failed to load font from {font_path}")
+        else:
+            font_families = QFontDatabase.applicationFontFamilies(font_id)
+            if font_families:
+                font_family = font_families[0]
+            else:
+                print("Failed to retrieve font family")
 
         # Load objects
         self.run_button = self.ui.findChild(QPushButton, 'run')
