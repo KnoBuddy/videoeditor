@@ -17,20 +17,6 @@ from PySide6.QtGui import QFontDatabase, QFont
 
 import resources_rc
 
-# Path handling for the .ui file and fonts
-if hasattr(sys, '_MEIPASS'):
-    # Packaged environment
-    ui_file_path = os.path.join(sys._MEIPASS, 'gui.ui')
-    font_path = os.path.join(sys._MEIPASS, 'fonts', 'digital-7 (mono).ttf')
-else:
-    # Development environment
-    ui_file_path = os.path.abspath('gui.ui')
-    font_path = os.path.abspath('fonts/digital-7 (mono).ttf')
-
-# Log paths for debugging purposes
-print(f"Loading UI from: {ui_file_path}")
-print(f"Loading font from: {font_path}")
-
 # Set the OpenGL attribute before creating the QApplication
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
@@ -53,6 +39,17 @@ class VideoProcessingThread(QThread):
 class VideoEditor(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        # Path handling for the .ui file and fonts
+        if hasattr(sys, '_MEIPASS'):
+            # Packaged environment
+            ui_file_path = os.path.join(sys._MEIPASS, 'gui.ui')
+            font_path = os.path.join(sys._MEIPASS, 'fonts', 'digital-7 (mono).ttf')
+        else:
+            # Development environment
+            ui_file_path = os.path.abspath('gui.ui')
+            font_path = os.path.abspath('fonts/digital-7 (mono).ttf')
+
         loader = QUiLoader()
         
         self.ui = loader.load(ui_file_path)
