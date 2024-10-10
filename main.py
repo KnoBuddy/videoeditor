@@ -43,11 +43,11 @@ class VideoEditor(QMainWindow):
         # Path handling for the .ui file and fonts
         if hasattr(sys, '_MEIPASS'):
             # Packaged environment
-            ui_file_path = os.path.join(sys._MEIPASS, 'new_gui.ui')
+            ui_file_path = os.path.join(sys._MEIPASS, 'gui.ui')
             font_path = os.path.join(sys._MEIPASS, 'fonts', 'digital-7 (mono).ttf')
         else:
             # Development environment
-            ui_file_path = os.path.abspath('new_gui.ui')
+            ui_file_path = os.path.abspath('gui.ui')
             font_path = os.path.abspath('fonts/digital-7 (mono).ttf')
 
         loader = QUiLoader()
