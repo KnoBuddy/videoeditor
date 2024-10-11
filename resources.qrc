@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/videoeditor_icon.ico</file>
+    <file>icons/videoeditor.png</file>
+  </qresource>
+  <qresource prefix="fonts">
+    <file>fonts/digital-7 (mono).ttf</file>
+  </qresource>
+</RCC>

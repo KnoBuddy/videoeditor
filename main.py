@@ -4,7 +4,7 @@
 
 import sys
 import os
-import argparse
+import platform
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import moviepy.audio.fx.all as afx
@@ -40,17 +40,25 @@ class VideoEditor(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        system = platform.system()
+
         # Path handling for the .ui file and fonts
         if hasattr(sys, '_MEIPASS'):
             # Packaged environment
             ui_file_path = os.path.join(sys._MEIPASS, 'gui.ui')
             font_path = os.path.join(sys._MEIPASS, 'fonts', 'digital-7 (mono).ttf')
-            icon_path = os.path.join(sys._MEIPASS, 'windowseditor_icon.ico')
+            if system == 'Windows':
+                icon_path = os.path.join(sys._MEIPASS, 'icons', 'videoeditor_icon.ico')
+            else:
+                icon_path = os.path.join(sys._MEIPASS, 'icons', 'videoeditor_icon.png')
         else:
             # Development environment
             ui_file_path = os.path.abspath('gui.ui')
             font_path = os.path.abspath('fonts/digital-7 (mono).ttf')
-            icon_path = os.path.abspath('windowseditor_icon.ico')
+            if system == 'Windows':
+                icon_path = os.path.abspath('icons/videoeditor_icon.ico')
+            else:
+                icon_path = os.path.abspath('icons/videoeditor_icon.png')
 
         loader = QUiLoader()
         
@@ -58,7 +66,7 @@ class VideoEditor(QMainWindow):
         self.setCentralWidget(self.ui)
         self.setFixedSize(self.ui.size())
         self.setWindowTitle("Video Editor v0.0.1")
-        self.setWindowIcon(resources_rc(QIcon(icon_path)))
+        self.setWindowIcon(QIcon(icon_path))
 
         # Attempt to load the font
         font_id = QFontDatabase.addApplicationFont(font_path)
