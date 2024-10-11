@@ -205,6 +205,12 @@
                      <height>50</height>
                     </size>
                    </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string comment="End Clip Time" extracomment="End Clip Time"/>
+                   </property>
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>
@@ -437,9 +443,9 @@
         </layout>
        </item>
        <item row="3" column="0">
-        <widget class="QProgressBar" name="progressBar">
+        <widget class="QProgressBar" name="progress_bar">
          <property name="value">
-          <number>24</number>
+          <number>0</number>
          </property>
         </widget>
        </item>

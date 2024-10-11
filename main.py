@@ -5,14 +5,15 @@
 import sys
 import os
 import platform
+import proglog
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import moviepy.audio.fx.all as afx
 import ffmpeg
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit, QProgressBar
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Qt, QThread, Signal, QTime
+from PySide6.QtCore import Qt, QThread, Signal, QTime, QObject
 from PySide6.QtGui import QFontDatabase, QFont, QIntValidator, QIcon
 
 import resources_rc
@@ -22,19 +23,75 @@ QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 cwd = os.getcwd()
 
-updating = False
-
 class VideoProcessingThread(QThread):
-    progress = Signal(str)
+    progress = Signal(int)
     finished = Signal()
 
-    def __init__(self, video_processing_function):
+    def __init__(self, input_file, output_file, clip_begin, clip_end, resolution_w, resolution_h, volume, new_bitrate):
         super().__init__()
-        self.video_processing_function = video_processing_function
+        self.input_file = input_file
+        self.output_file = output_file
+        self.clip_begin = clip_begin
+        self.clip_end = clip_end
+        self.resolution_w = resolution_w
+        self.resolution_h = resolution_h
+        self.volume = volume
+        self.new_bitrate = new_bitrate
 
     def run(self):
-        self.video_processing_function()
-        self.finished.emit()
+        class CustomLogger(proglog.ProgressBarLogger):
+            def __init__(self, progress_signal):
+                super().__init__()
+                self.progress_signal = progress_signal
+
+            def bars_callback(self, bar, attr, value, old_value=None):
+                # This method is called whenever an attribute of a bar changes
+                if bar == 't' and attr == 'index':
+                    total = self.bars['t']['total']
+                    index = value
+                    progress = index / total
+                    percentage = int(progress * 100)
+                    self.progress_signal.emit(percentage)
+
+
+        try:
+            logger = CustomLogger(self.progress)
+
+            # Proceed with video processing
+            video = VideoFileClip(self.input_file)
+            if self.clip_begin or self.clip_end:
+                video = video.subclip(self.clip_begin, self.clip_end)
+            if self.resolution_w and self.resolution_h:
+                video = video.resize(newsize=(self.resolution_w, self.resolution_h))
+            if self.volume is not None:
+                video = video.fx(afx.volumex, self.volume)
+
+            kwargs = {
+                'codec': 'libx264',
+                'audio_codec': 'aac',
+                'logger': logger  # Use the custom logger
+            }
+            if self.new_bitrate:
+                kwargs['bitrate'] = f'{self.new_bitrate}k'
+            if not self.output_file:
+                self.output_file = os.path.splitext(self.input_file)[0] + '-modified.mp4'
+            else:
+                self.output_file = self.output_file + '.mp4'
+
+            # Write the video file with the custom logger
+            video.write_videofile(self.output_file, **kwargs)
+            print("Video created successfully")
+        except Exception as e:
+            print(f"Error processing video: {e}")
+        finally:
+            self.finished.emit()
+
+    def update_progress(self, percentage):
+        self.progress.emit(percentage)
+    
+    def update_progress_bar(self, value):
+        self.progress_bar.setValue(value)
+
 
 class VideoEditor(QMainWindow):
     def __init__(self):
@@ -94,6 +151,11 @@ class VideoEditor(QMainWindow):
         self.input_file_button = self.ui.findChild(QPushButton,'input_file_button')
         self.output_file_check = self.ui.findChild(QCheckBox, "output_file_check")
         self.output_file_text = self.ui.findChild(QLineEdit, "output_file_text")
+        self.progress_bar = self.ui.findChild(QProgressBar, 'progress_bar')
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setValue(0)
+
 
         self.res_w.setValidator(QIntValidator(8, 7680, self))
         self.res_h.setValidator(QIntValidator(4, 4320, self))
@@ -213,12 +275,13 @@ class VideoEditor(QMainWindow):
         self.end_time_to_slider()
 
     def run_button_clicked(self):
+        print("Run button clicked")
         self.input_file = self.input_file_text.text()
 
         if not self.input_file:
             print("No input file selected. Please input a filename to be edited.")
             return
-        
+
         clip_begin = self.start_time_slider.value()
         clip_end = self.end_time_slider.value()
         resolution_w = None
@@ -254,42 +317,28 @@ class VideoEditor(QMainWindow):
         else:
             new_bitrate = None
 
+        volume = float(self.volume_slider.value()/100)
 
-        def process_video():
-            if clip_begin and clip_end:
-                video = VideoFileClip(self.input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin, clip_end)
-            elif clip_begin and not clip_end:
-                video = VideoFileClip(self.input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin)
-            elif clip_end and not clip_begin:
-                video = VideoFileClip(self.input_file, target_resolution=(resolution_w, resolution_h)).subclip(0, clip_end)
-            else:
-                video = VideoFileClip(self.input_file, target_resolution=(resolution_w, resolution_h))
-            # Adjust volume
-            volume = float(self.volume_slider.value()/100)
-            video = video.fx(afx.volumex, volume)
+        self.thread = VideoProcessingThread(
+            input_file=self.input_file,
+            output_file=self.output_file,
+            clip_begin=clip_begin,
+            clip_end=clip_end,
+            resolution_w=resolution_w,
+            resolution_h=resolution_h,
+            volume=volume,
+            new_bitrate=new_bitrate
+        )
 
-            kwargs = {
-                'codec': 'libx264',
-                'audio_codec': 'aac'
-            }
-
-            if not new_bitrate:
-                print("No bitrate supplied. Supply bitrate or uncheck field.")
-
-            if new_bitrate is not None and new_bitrate != '':
-                kwargs['bitrate'] = f'{new_bitrate}k'
-
-            if self.output_file == None or self.output_file == '':
-                self.output_file = self.input_file.removesuffix(".mp4")
-                output_mod = '-modified'
-            else:
-                output_mod = ''
-            video.write_videofile(f"{self.output_file}{output_mod}.mp4", **kwargs)
-        
-        self.thread = VideoProcessingThread(process_video)
+        # Connect the progress signal to the update method
+        self.thread.progress.connect(self.update_progress_bar)
+        print('Thread created and progress signal connected')
         self.thread.finished.connect(self.thread.quit)
         self.thread.start()
 
+    def update_progress_bar(self, value):
+        print(f"Updating progress bar to {value}%")
+        self.progress_bar.setValue(value)
 
 if __name__ == "__main__":
     # main()
