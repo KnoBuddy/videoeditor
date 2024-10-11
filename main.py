@@ -13,7 +13,7 @@ import ffmpeg
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QThread, Signal, QTime
-from PySide6.QtGui import QFontDatabase, QFont, QIntValidator
+from PySide6.QtGui import QFontDatabase, QFont, QIntValidator, QIcon
 
 import resources_rc
 
@@ -45,10 +45,12 @@ class VideoEditor(QMainWindow):
             # Packaged environment
             ui_file_path = os.path.join(sys._MEIPASS, 'gui.ui')
             font_path = os.path.join(sys._MEIPASS, 'fonts', 'digital-7 (mono).ttf')
+            icon_path = os.path.join(sys._MEIPASS, 'windowseditor_icon.ico')
         else:
             # Development environment
             ui_file_path = os.path.abspath('gui.ui')
             font_path = os.path.abspath('fonts/digital-7 (mono).ttf')
+            icon_path = os.path.abspath('windowseditor_icon.ico')
 
         loader = QUiLoader()
         
@@ -56,6 +58,7 @@ class VideoEditor(QMainWindow):
         self.setCentralWidget(self.ui)
         self.setFixedSize(self.ui.size())
         self.setWindowTitle("Video Editor v0.0.1")
+        self.setWindowIcon(resources_rc(QIcon(icon_path)))
 
         # Attempt to load the font
         font_id = QFontDatabase.addApplicationFont(font_path)
@@ -92,6 +95,9 @@ class VideoEditor(QMainWindow):
         self.volume_number.setFont(QFont(font_family, 48))
         self.volume_number.setText(str(self.volume_slider.value()))
         self.volume_number.setValidator(QIntValidator(0, 200, self))
+
+        self.start_time.setDisplayFormat("HH:mm:ss")
+        self.end_time.setDisplayFormat("HH:mm:ss")
 
         self.start_time_slider = self.ui.findChild(QSlider, "start_time_slider")
         self.end_time_slider = self.ui.findChild(QSlider, "end_time_slider")
@@ -242,7 +248,6 @@ class VideoEditor(QMainWindow):
 
 
         def process_video():
-            print(f"Clip Begin: {clip_begin}\n Clip End: {clip_end}")
             if clip_begin and clip_end:
                 video = VideoFileClip(self.input_file, target_resolution=(resolution_w, resolution_h)).subclip(clip_begin, clip_end)
             elif clip_begin and not clip_end:
