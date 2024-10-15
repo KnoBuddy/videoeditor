@@ -11,12 +11,13 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 import moviepy.audio.fx.all as afx
 import ffmpeg
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit, QProgressBar
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit, QProgressBar, QLabel
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Qt, QThread, Signal, QTime, QObject
+from PySide6.QtCore import Qt, QThread, Signal, QTime, QObject, QStringDecoder
 from PySide6.QtGui import QFontDatabase, QFont, QIntValidator, QIcon
 
 import resources_rc
+from preview import *
 
 # Set the OpenGL attribute before creating the QApplication
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
@@ -174,7 +175,12 @@ class VideoEditor(QMainWindow):
         self.start_time_slider.setRange(0, 0)
         self.end_time_slider.setRange(0, 0)
 
-        self.updating = False
+        self.preview = self.ui.findChild(QLabel, "preview")
+        self.play = self.ui.findChild(QPushButton, "play")
+        self.play.setText("\u25B6")
+
+        self.stop = self.ui.findChild(QPushButton, "stop")
+        self.stop.setText("\u23F9")
 
         self.connect_objects()
 
@@ -187,6 +193,21 @@ class VideoEditor(QMainWindow):
         self.start_time.timeChanged.connect(self.start_time_to_slider)
         self.end_time_slider.valueChanged.connect(self.slider_to_end_time)
         self.end_time.timeChanged.connect(self.end_time_to_slider)
+        self.play.clicked.connect(self.play_pause_clicked)
+        self.stop.clicked.connect(self.stop_clicked)
+
+    def play_pause_clicked(self):
+        if self.input_file_text.text():
+            if self.play.text() == "\u25B6":
+                self.play.setText("\u23F8")
+                self.preview.frame_grab.pause()
+            else:
+                self.play.setText("\u25B6")
+                self.preview.frame_grab.play()
+    
+    def stop_clicked(self):
+        if self.input_file_text.text():
+            self.preview.frame_grab.stop()
     
     def update_volume_lcd(self, value):
         self.volume_number.setText(str(value))
@@ -273,6 +294,8 @@ class VideoEditor(QMainWindow):
         self.end_time_slider.setRange(0, self.video_duration)
         self.slider_to_end_time(self.video_duration)
         self.end_time_to_slider()
+
+        self.preview = VideoPreviewWidget(VideoFileClip(self.input_file_text.text(), target_resolution=(180, 320)), self.preview)
 
     def run_button_clicked(self):
         print("Run button clicked")
