@@ -5,6 +5,9 @@ venv/
 build/
 dist/
 
+*Identifier
+*:*
+
 *mp4
 *aac
 *wmv
