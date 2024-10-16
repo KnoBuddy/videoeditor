@@ -5,6 +5,8 @@ venv/
 build/
 dist/
 
+*:Zone.Identifier
+
 *mp4
 *aac
 *wmv
