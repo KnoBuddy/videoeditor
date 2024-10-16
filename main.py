@@ -13,7 +13,7 @@ import ffmpeg
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit, QProgressBar, QLabel
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import Qt, QThread, Signal, QTime, QObject, QStringDecoder
+from PySide6.QtCore import Qt, QThread, Signal, QTime, QTimer
 from PySide6.QtGui import QFontDatabase, QFont, QIntValidator, QIcon
 
 import resources_rc
@@ -200,14 +200,14 @@ class VideoEditor(QMainWindow):
         if self.input_file_text.text():
             if self.play.text() == "\u25B6":
                 self.play.setText("\u23F8")
-                self.preview.frame_grab.pause()
+                self.preview_video.frame_grab.pause()
             else:
                 self.play.setText("\u25B6")
-                self.preview.frame_grab.play()
+                self.preview_video.frame_grab.play()
     
     def stop_clicked(self):
         if self.input_file_text.text():
-            self.preview.frame_grab.stop()
+            self.preview_video.frame_grab.stop()
     
     def update_volume_lcd(self, value):
         self.volume_number.setText(str(value))
@@ -236,6 +236,7 @@ class VideoEditor(QMainWindow):
         seconds = value % 60
         self.start_time.setTime(QTime(hours, minutes, seconds))
         self.end_time.setMinimumTime(QTime(hours, minutes, seconds))
+        self.preview_video.set_time(value, "start")
 
     def slider_to_end_time(self, value):
         hours = value // 3600
@@ -243,12 +244,14 @@ class VideoEditor(QMainWindow):
         seconds = value % 60
         self.end_time.setTime(QTime(hours, minutes, seconds))
         self.start_time.setMaximumTime(QTime(hours, minutes, seconds))
+        self.preview_video.set_time(value, "end")
 
     def start_time_to_slider(self):
         total_seconds = self.time_to_seconds(self.start_time.time())
         self.end_time_slider.setRange(total_seconds, self.video_duration)
         self.start_time_slider.blockSignals(True)
         self.start_time_slider.setValue(total_seconds)
+        self.preview_video.set_time(total_seconds, "start")
         self.start_time_slider.blockSignals(False)
 
     def end_time_to_slider(self):
@@ -256,6 +259,7 @@ class VideoEditor(QMainWindow):
         self.start_time_slider.setRange(0, total_seconds)
         self.end_time_slider.blockSignals(True)
         self.end_time_slider.setValue(total_seconds)
+        self.preview_video.set_time(total_seconds, "end")
         self.end_time_slider.blockSignals(False)
 
     def time_to_seconds(self, time):
@@ -284,6 +288,8 @@ class VideoEditor(QMainWindow):
                 QMessageBox.warning(self, "Invalid File", "The selected file is not valid.")
 
         self.video_duration = VideoFileClip(self.input_file_text.text()).duration
+        
+        self.preview_video = VideoPreviewWidget(VideoFileClip(self.input_file_text.text(), target_resolution=(180, 320)), self.preview)
 
         # Calculate maximum time from video duration (in seconds)
         self.max_time = self.seconds_to_time(self.video_duration)
@@ -294,8 +300,6 @@ class VideoEditor(QMainWindow):
         self.end_time_slider.setRange(0, self.video_duration)
         self.slider_to_end_time(self.video_duration)
         self.end_time_to_slider()
-
-        self.preview = VideoPreviewWidget(VideoFileClip(self.input_file_text.text(), target_resolution=(180, 320)), self.preview)
 
     def run_button_clicked(self):
         print("Run button clicked")
