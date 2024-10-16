@@ -291,7 +291,7 @@ class VideoEditor(QMainWindow):
 
         self.video_duration = VideoFileClip(self.input_file_text.text()).duration
         
-        self.preview_video = VideoPreviewWidget(VideoFileClip(self.input_file_text.text(), target_resolution=(360, 640)).set_fps(15), self.preview, self.video_time_text)
+        self.preview_video = VideoPreviewWidget(VideoFileClip(self.input_file_text.text(), target_resolution=(360, 640)), self.preview, self.video_time_text)
 
         # Calculate maximum time from video duration (in seconds)
         self.max_time = self.seconds_to_time(self.video_duration)
