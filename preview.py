@@ -1,16 +1,16 @@
-from PySide6.QtCore import QThread, Signal, QTimer
+from PySide6.QtCore import QThread, Signal, QTimer, QTime
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QImage, QPixmap
 from numpy import ndarray
 
 class VideoPreviewWidget(QWidget):
-    def __init__(self, video_input, preview):
+    def __init__(self, video_input, preview, video_time_text):
         super().__init__()
         video_clip = video_input
         self.preview = preview
         
         # Start the frame grabbing threa
-        self.frame_grab = FrameGrab(video_clip)
+        self.frame_grab = FrameGrab(video_clip, video_time_text)
         self.frame_grab.frameReady.connect(self.update_frame)
         self.frame_grab.start()
 
@@ -48,12 +48,13 @@ class VideoPreviewWidget(QWidget):
 class FrameGrab(QThread):
     frameReady = Signal(ndarray)
 
-    def __init__(self, video_clip):
+    def __init__(self, video_clip, video_time_text):
         super().__init__()
         self.video_clip = video_clip
         self.running = True
         self.start_time = 0
         self.timer = 0
+        self.video_time_text = video_time_text
         self.duration = self.video_clip.duration
         self.end_time = self.duration
 
@@ -76,6 +77,7 @@ class FrameGrab(QThread):
                 self.frameReady.emit(frame)  # Send frame via signal
                 self.msleep(int(frame_interval * 1000))  # Sleep until the next frame
                 self.timer += frame_interval
+                self.video_time_text.setTime(self.seconds_to_time(self.timer))
                 if self.timer >= self.duration:
                     self.timer = self.start_time
             
@@ -92,3 +94,11 @@ class FrameGrab(QThread):
     def stop(self):
         self.running = False
         self.timer = self.start_time
+
+    def seconds_to_time(self, time):
+        # Calculate maximum time from video duration (in seconds)
+        hours = time // 3600
+        minutes = (time % 3600) // 60
+        seconds = time % 60
+        formatted_time = QTime(hours, minutes, seconds)
+        return formatted_time

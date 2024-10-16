@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>720</height>
+    <width>1600</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,6 +32,12 @@
    <string>VideoEditor</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="minimumSize">
+    <size>
+     <width>1600</width>
+     <height>900</height>
+    </size>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <widget class="QWidget" name="verticalWidget" native="true">
@@ -277,14 +283,14 @@
                 <widget class="QLabel" name="preview">
                  <property name="minimumSize">
                   <size>
-                   <width>320</width>
-                   <height>180</height>
+                   <width>640</width>
+                   <height>360</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>320</width>
-                   <height>180</height>
+                   <width>640</width>
+                   <height>360</height>
                   </size>
                  </property>
                  <property name="styleSheet">
@@ -300,6 +306,27 @@
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QTimeEdit" name="preview_time_text">
+               <property name="styleSheet">
+                <string notr="true">QTimeEdit {
+    background-color: transparent;
+    color: #000000;  /* Black text*/
+    font-family: &quot;DS-Digital&quot;, &quot;Digital-7 Mono&quot;, &quot;LCD&quot;, monospace;
+    font-size: 24px;
+    border: 1px  stransparent;
+    padding: 5px;
+}
+</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="keyboardTracking">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -323,7 +350,7 @@
                 <number>250</number>
                </property>
                <property name="topMargin">
-                <number>50</number>
+                <number>0</number>
                </property>
                <property name="bottomMargin">
                 <number>50</number>
@@ -354,7 +381,7 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_8">
                <property name="topMargin">
-                <number>50</number>
+                <number>0</number>
                </property>
                <property name="rightMargin">
                 <number>200</number>
