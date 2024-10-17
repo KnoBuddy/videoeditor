@@ -214,6 +214,7 @@ class VideoEditor(QMainWindow):
                 self.play.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
                 self.preview_video.frame_grab.play()
                 self.play_pause = "play"
+                self.play_stop = "play"
     
     def stop_clicked(self):
         if self.input_file_text.text():
