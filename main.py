@@ -1,6 +1,5 @@
 # To Do:
-# Add Sliders for Beginning and End
-# Add preview img/video
+# Fix Zero length video with sliders error
 
 import sys
 import os
