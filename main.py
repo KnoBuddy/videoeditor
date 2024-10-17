@@ -185,6 +185,7 @@ class VideoEditor(QMainWindow):
         self.play_stop = "play"
 
         self.video_time_text = self.ui.findChild(QTimeEdit, "preview_time_text")
+        self.video_time_text.setDisplayFormat("HH:mm:ss")
 
         self.connect_objects()
 
