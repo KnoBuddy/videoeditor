@@ -21,14 +21,16 @@ class VideoPreviewWidget(QWidget):
         self.update_type = None
         self.new_time_value = 0
 
-    def set_time(self, value, update_type):
+    def set_time(self, value, update_type, play_pause=None, play_stop=None):
         self.new_time_value = value
         self.update_type = update_type
+        self.play_pause = play_pause
+        self.play_stop = play_stop
         self.slider_timer.start(300)
 
     def apply_update(self):
         if self.update_type == "start":
-            self.frame_grab.update_start(self.new_time_value)
+            self.frame_grab.update_start(self.new_time_value, self.play_pause, self.play_stop)
         elif self.update_type == "end":
             self.frame_grab.update_end(self.new_time_value)
 
@@ -58,10 +60,16 @@ class FrameGrab(QThread):
         self.duration = self.video_clip.duration
         self.end_time = self.duration
 
-    def update_start(self, time):
+    def update_start(self, time, play_pause, play_stop):
         self.stop()
         self.start_time = time
         self.timer = time
+        frame = self.video_clip.get_frame(self.timer)  # Get frame at current time
+        self.frameReady.emit(frame)  # Send frame via signal
+        if play_pause == "pause":
+            return
+        if play_stop == "stop":
+            return
         self.play()
 
     def update_end(self, time):
@@ -94,6 +102,7 @@ class FrameGrab(QThread):
     def stop(self):
         self.running = False
         self.timer = self.start_time
+        self.video_time_text.setTime(self.seconds_to_time(self.timer))
 
     def seconds_to_time(self, time):
         # Calculate maximum time from video duration (in seconds)

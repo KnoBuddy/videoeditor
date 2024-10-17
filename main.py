@@ -11,7 +11,7 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 import moviepy.audio.fx.all as afx
 import ffmpeg
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit, QProgressBar, QLabel
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QCheckBox, QLineEdit, QFileDialog, QMessageBox, QSlider, QTimeEdit, QProgressBar, QLabel, QStyle
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QThread, Signal, QTime, QTimer
 from PySide6.QtGui import QFontDatabase, QFont, QIntValidator, QIcon
@@ -123,7 +123,7 @@ class VideoEditor(QMainWindow):
         self.ui = loader.load(ui_file_path)
         self.setCentralWidget(self.ui)
         self.setFixedSize(self.ui.size())
-        self.setWindowTitle("Video Editor v0.0.1")
+        self.setWindowTitle("Video Editor v0.1.0")
         self.setWindowIcon(QIcon(icon_path))
 
         # Attempt to load the font
@@ -177,10 +177,12 @@ class VideoEditor(QMainWindow):
 
         self.preview = self.ui.findChild(QLabel, "preview")
         self.play = self.ui.findChild(QPushButton, "play")
-        self.play.setText("\u25B6")
+        self.play.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.play_pause = "play"
 
         self.stop = self.ui.findChild(QPushButton, "stop")
-        self.stop.setText("\u23F9")
+        self.stop.setIcon(self.style().standardIcon(QStyle.SP_MediaStop))
+        self.play_stop = "play"
 
         self.video_time_text = self.ui.findChild(QTimeEdit, "preview_time_text")
 
@@ -200,16 +202,23 @@ class VideoEditor(QMainWindow):
 
     def play_pause_clicked(self):
         if self.input_file_text.text():
-            if self.play.text() == "\u25B6":
-                self.play.setText("\u23F8")
+            if self.play_pause == "play":
+                if self.play_stop == "stop":
+                    self.preview_video.frame_grab.play()
+                    self.play_stop = "play"
+                    return
+                self.play.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
                 self.preview_video.frame_grab.pause()
-            else:
-                self.play.setText("\u25B6")
+                self.play_pause = "pause"
+            elif self.play_pause == "pause":
+                self.play.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
                 self.preview_video.frame_grab.play()
+                self.play_pause = "play"
     
     def stop_clicked(self):
         if self.input_file_text.text():
             self.preview_video.frame_grab.stop()
+            self.play_stop = "stop"
     
     def update_volume_lcd(self, value):
         self.volume_number.setText(str(value))
@@ -238,7 +247,7 @@ class VideoEditor(QMainWindow):
         seconds = value % 60
         self.start_time.setTime(QTime(hours, minutes, seconds))
         self.end_time.setMinimumTime(QTime(hours, minutes, seconds))
-        self.preview_video.set_time(value, "start")
+        self.preview_video.set_time(value, "start", self.play_pause, self.play_stop)
 
     def slider_to_end_time(self, value):
         hours = value // 3600
@@ -253,7 +262,7 @@ class VideoEditor(QMainWindow):
         self.end_time_slider.setRange(total_seconds, self.video_duration)
         self.start_time_slider.blockSignals(True)
         self.start_time_slider.setValue(total_seconds)
-        self.preview_video.set_time(total_seconds, "start")
+        self.preview_video.set_time(total_seconds, "start", self.play_pause, self.play_stop)
         self.start_time_slider.blockSignals(False)
 
     def end_time_to_slider(self):
